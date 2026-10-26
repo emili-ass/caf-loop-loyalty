@@ -12,6 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AccesoRouteImport } from './routes/acceso'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthenticatedEmpleadosRouteImport } from './routes/_authenticated/empleados'
+import { Route as AuthenticatedPropietarioRouteImport } from './routes/_authenticated/propietario'
 import { Route as AuthenticatedTarjetaRouteImport } from './routes/_authenticated/tarjeta'
 
 const IndexRoute = IndexRouteImport.update({
@@ -28,6 +31,22 @@ const AccesoRoute = AccesoRouteImport.update({
   path: '/acceso',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedEmpleadosRoute = AuthenticatedEmpleadosRouteImport.update({
+  id: '/empleados',
+  path: '/empleados',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPropietarioRoute =
+  AuthenticatedPropietarioRouteImport.update({
+    id: '/propietario',
+    path: '/propietario',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedTarjetaRoute = AuthenticatedTarjetaRouteImport.update({
   id: '/tarjeta',
   path: '/tarjeta',
@@ -37,11 +56,17 @@ const AuthenticatedTarjetaRoute = AuthenticatedTarjetaRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/acceso': typeof AccesoRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/empleados': typeof AuthenticatedEmpleadosRoute
+  '/propietario': typeof AuthenticatedPropietarioRoute
   '/tarjeta': typeof AuthenticatedTarjetaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/acceso': typeof AccesoRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/empleados': typeof AuthenticatedEmpleadosRoute
+  '/propietario': typeof AuthenticatedPropietarioRoute
   '/tarjeta': typeof AuthenticatedTarjetaRoute
 }
 export interface FileRoutesById {
@@ -49,21 +74,44 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/acceso': typeof AccesoRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/empleados': typeof AuthenticatedEmpleadosRoute
+  '/_authenticated/propietario': typeof AuthenticatedPropietarioRoute
   '/_authenticated/tarjeta': typeof AuthenticatedTarjetaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/acceso' | '/tarjeta'
+  fullPaths:
+    | '/'
+    | '/acceso'
+    | '/reset-password'
+    | '/empleados'
+    | '/propietario'
+    | '/tarjeta'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/acceso' | '/tarjeta'
+  to:
+    | '/'
+    | '/acceso'
+    | '/reset-password'
+    | '/empleados'
+    | '/propietario'
+    | '/tarjeta'
   id:
-    '__root__' | '/' | '/_authenticated' | '/acceso' | '/_authenticated/tarjeta'
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/acceso'
+    | '/reset-password'
+    | '/_authenticated/empleados'
+    | '/_authenticated/propietario'
+    | '/_authenticated/tarjeta'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AccesoRoute: typeof AccesoRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -89,6 +137,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccesoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/empleados': {
+      id: '/_authenticated/empleados'
+      path: '/empleados'
+      fullPath: '/empleados'
+      preLoaderRoute: typeof AuthenticatedEmpleadosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/propietario': {
+      id: '/_authenticated/propietario'
+      path: '/propietario'
+      fullPath: '/propietario'
+      preLoaderRoute: typeof AuthenticatedPropietarioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tarjeta': {
       id: '/_authenticated/tarjeta'
       path: '/tarjeta'
@@ -100,10 +169,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedEmpleadosRoute: typeof AuthenticatedEmpleadosRoute
+  AuthenticatedPropietarioRoute: typeof AuthenticatedPropietarioRoute
   AuthenticatedTarjetaRoute: typeof AuthenticatedTarjetaRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedEmpleadosRoute: AuthenticatedEmpleadosRoute,
+  AuthenticatedPropietarioRoute: AuthenticatedPropietarioRoute,
   AuthenticatedTarjetaRoute: AuthenticatedTarjetaRoute,
 }
 
@@ -114,6 +187,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AccesoRoute: AccesoRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
