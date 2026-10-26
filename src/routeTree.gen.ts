@@ -10,14 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AccesoRouteImport } from './routes/acceso'
-import { Route as EmpleadosRouteImport } from './routes/empleados'
-import { Route as PropietarioRouteImport } from './routes/propietario'
-import { Route as TarjetaRouteImport } from './routes/tarjeta'
+import { Route as AuthenticatedTarjetaRouteImport } from './routes/_authenticated/tarjeta'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccesoRoute = AccesoRouteImport.update({
@@ -25,58 +28,42 @@ const AccesoRoute = AccesoRouteImport.update({
   path: '/acceso',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmpleadosRoute = EmpleadosRouteImport.update({
-  id: '/empleados',
-  path: '/empleados',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PropietarioRoute = PropietarioRouteImport.update({
-  id: '/propietario',
-  path: '/propietario',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TarjetaRoute = TarjetaRouteImport.update({
+const AuthenticatedTarjetaRoute = AuthenticatedTarjetaRouteImport.update({
   id: '/tarjeta',
   path: '/tarjeta',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/acceso': typeof AccesoRoute
-  '/empleados': typeof EmpleadosRoute
-  '/propietario': typeof PropietarioRoute
-  '/tarjeta': typeof TarjetaRoute
+  '/tarjeta': typeof AuthenticatedTarjetaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/acceso': typeof AccesoRoute
-  '/empleados': typeof EmpleadosRoute
-  '/propietario': typeof PropietarioRoute
-  '/tarjeta': typeof TarjetaRoute
+  '/tarjeta': typeof AuthenticatedTarjetaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/acceso': typeof AccesoRoute
-  '/empleados': typeof EmpleadosRoute
-  '/propietario': typeof PropietarioRoute
-  '/tarjeta': typeof TarjetaRoute
+  '/_authenticated/tarjeta': typeof AuthenticatedTarjetaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/acceso' | '/empleados' | '/propietario' | '/tarjeta'
+  fullPaths: '/' | '/acceso' | '/tarjeta'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/acceso' | '/empleados' | '/propietario' | '/tarjeta'
-  id: '__root__' | '/' | '/acceso' | '/empleados' | '/propietario' | '/tarjeta'
+  to: '/' | '/acceso' | '/tarjeta'
+  id:
+    '__root__' | '/' | '/_authenticated' | '/acceso' | '/_authenticated/tarjeta'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AccesoRoute: typeof AccesoRoute
-  EmpleadosRoute: typeof EmpleadosRoute
-  PropietarioRoute: typeof PropietarioRoute
-  TarjetaRoute: typeof TarjetaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -88,6 +75,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/acceso': {
       id: '/acceso'
       path: '/acceso'
@@ -95,36 +89,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccesoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/empleados': {
-      id: '/empleados'
-      path: '/empleados'
-      fullPath: '/empleados'
-      preLoaderRoute: typeof EmpleadosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/propietario': {
-      id: '/propietario'
-      path: '/propietario'
-      fullPath: '/propietario'
-      preLoaderRoute: typeof PropietarioRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tarjeta': {
-      id: '/tarjeta'
+    '/_authenticated/tarjeta': {
+      id: '/_authenticated/tarjeta'
       path: '/tarjeta'
       fullPath: '/tarjeta'
-      preLoaderRoute: typeof TarjetaRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedTarjetaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedTarjetaRoute: typeof AuthenticatedTarjetaRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedTarjetaRoute: AuthenticatedTarjetaRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AccesoRoute: AccesoRoute,
-  EmpleadosRoute: EmpleadosRoute,
-  PropietarioRoute: PropietarioRoute,
-  TarjetaRoute: TarjetaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
