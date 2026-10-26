@@ -107,7 +107,7 @@ async function main() {
   // 8 sellos = 1 recompensa
   let last: any;
   for (let i = 0; i < 8; i++) {
-    last = (await empA.db.rpc("register_purchase", { _cafe_id: A, _card_code: c1A.code.toLowerCase(), _amount: 55, _idempotency_key: key(`p${i}`) })).data;
+    { const rr = await empA.db.rpc("register_purchase", { _cafe_id: A, _card_code: c1A.code.toLowerCase(), _amount: 55, _idempotency_key: key(`p${i}`) }); if (rr.error && i === 0) console.log("DEBUG", rr.error); last = rr.data; }
   }
   ok(last?.stamps === 0 && last?.rewards_available === 1 && last?.reward_earned === true, "8 sellos generan 1 recompensa y reinician la tarjeta");
   const verif = await empA.db.from("purchases").select("verification").eq("card_id", c1A.id);
