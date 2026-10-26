@@ -50,12 +50,13 @@ async function main() {
   const c2 = await user("cliente2");
   const anon = createClient(URL, ANON, opts);
 
-  await admin.from("cafe_members").insert([
-    { cafe_id: A, user_id: owner.id, role: "owner" },
-    { cafe_id: A, user_id: empA.id, role: "employee" },
-    { cafe_id: B, user_id: empB.id, role: "employee" },
+  const mem = await admin.from("cafe_members").insert([
+    { cafe_id: A, user_id: owner.id, role: "owner", active: true },
+    { cafe_id: A, user_id: empA.id, role: "employee", active: true },
+    { cafe_id: B, user_id: empB.id, role: "employee", active: true },
     { cafe_id: A, user_id: inactive.id, role: "employee", active: false },
   ]);
+  if (mem.error) throw mem.error;
 
   // Perfil automático
   const prof = await c1.db.from("profiles").select("display_name").eq("id", c1.id).single();
@@ -107,7 +108,7 @@ async function main() {
   // 8 sellos = 1 recompensa
   let last: any;
   for (let i = 0; i < 8; i++) {
-    { const rr = await empA.db.rpc("register_purchase", { _cafe_id: A, _card_code: c1A.code.toLowerCase(), _amount: 55, _idempotency_key: key(`p${i}`) }); if (rr.error && i === 0) console.log("DEBUG", rr.error); last = rr.data; }
+    { const rr = await empA.db.rpc("register_purchase", { _cafe_id: A, _card_code: c1A.code.toLowerCase(), _amount: 55, _idempotency_key: key(`p${i}`) }); last = rr.data; }
   }
   ok(last?.stamps === 0 && last?.rewards_available === 1 && last?.reward_earned === true, "8 sellos generan 1 recompensa y reinician la tarjeta");
   const verif = await empA.db.from("purchases").select("verification").eq("card_id", c1A.id);
