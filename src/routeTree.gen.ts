@@ -10,14 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AccesoRouteImport } from './routes/acceso'
-import { Route as EmpleadosRouteImport } from './routes/empleados'
-import { Route as PropietarioRouteImport } from './routes/propietario'
-import { Route as TarjetaRouteImport } from './routes/tarjeta'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthenticatedEmpleadosRouteImport } from './routes/_authenticated/empleados'
+import { Route as AuthenticatedPropietarioRouteImport } from './routes/_authenticated/propietario'
+import { Route as AuthenticatedTarjetaRouteImport } from './routes/_authenticated/tarjeta'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccesoRoute = AccesoRouteImport.update({
@@ -25,58 +31,87 @@ const AccesoRoute = AccesoRouteImport.update({
   path: '/acceso',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmpleadosRoute = EmpleadosRouteImport.update({
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedEmpleadosRoute = AuthenticatedEmpleadosRouteImport.update({
   id: '/empleados',
   path: '/empleados',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const PropietarioRoute = PropietarioRouteImport.update({
-  id: '/propietario',
-  path: '/propietario',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TarjetaRoute = TarjetaRouteImport.update({
+const AuthenticatedPropietarioRoute =
+  AuthenticatedPropietarioRouteImport.update({
+    id: '/propietario',
+    path: '/propietario',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTarjetaRoute = AuthenticatedTarjetaRouteImport.update({
   id: '/tarjeta',
   path: '/tarjeta',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/acceso': typeof AccesoRoute
-  '/empleados': typeof EmpleadosRoute
-  '/propietario': typeof PropietarioRoute
-  '/tarjeta': typeof TarjetaRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/empleados': typeof AuthenticatedEmpleadosRoute
+  '/propietario': typeof AuthenticatedPropietarioRoute
+  '/tarjeta': typeof AuthenticatedTarjetaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/acceso': typeof AccesoRoute
-  '/empleados': typeof EmpleadosRoute
-  '/propietario': typeof PropietarioRoute
-  '/tarjeta': typeof TarjetaRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/empleados': typeof AuthenticatedEmpleadosRoute
+  '/propietario': typeof AuthenticatedPropietarioRoute
+  '/tarjeta': typeof AuthenticatedTarjetaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/acceso': typeof AccesoRoute
-  '/empleados': typeof EmpleadosRoute
-  '/propietario': typeof PropietarioRoute
-  '/tarjeta': typeof TarjetaRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/empleados': typeof AuthenticatedEmpleadosRoute
+  '/_authenticated/propietario': typeof AuthenticatedPropietarioRoute
+  '/_authenticated/tarjeta': typeof AuthenticatedTarjetaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/acceso' | '/empleados' | '/propietario' | '/tarjeta'
+  fullPaths:
+    | '/'
+    | '/acceso'
+    | '/reset-password'
+    | '/empleados'
+    | '/propietario'
+    | '/tarjeta'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/acceso' | '/empleados' | '/propietario' | '/tarjeta'
-  id: '__root__' | '/' | '/acceso' | '/empleados' | '/propietario' | '/tarjeta'
+  to:
+    | '/'
+    | '/acceso'
+    | '/reset-password'
+    | '/empleados'
+    | '/propietario'
+    | '/tarjeta'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/acceso'
+    | '/reset-password'
+    | '/_authenticated/empleados'
+    | '/_authenticated/propietario'
+    | '/_authenticated/tarjeta'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AccesoRoute: typeof AccesoRoute
-  EmpleadosRoute: typeof EmpleadosRoute
-  PropietarioRoute: typeof PropietarioRoute
-  TarjetaRoute: typeof TarjetaRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -88,6 +123,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/acceso': {
       id: '/acceso'
       path: '/acceso'
@@ -95,36 +137,57 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccesoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/empleados': {
-      id: '/empleados'
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/empleados': {
+      id: '/_authenticated/empleados'
       path: '/empleados'
       fullPath: '/empleados'
-      preLoaderRoute: typeof EmpleadosRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedEmpleadosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/propietario': {
-      id: '/propietario'
+    '/_authenticated/propietario': {
+      id: '/_authenticated/propietario'
       path: '/propietario'
       fullPath: '/propietario'
-      preLoaderRoute: typeof PropietarioRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedPropietarioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/tarjeta': {
-      id: '/tarjeta'
+    '/_authenticated/tarjeta': {
+      id: '/_authenticated/tarjeta'
       path: '/tarjeta'
       fullPath: '/tarjeta'
-      preLoaderRoute: typeof TarjetaRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedTarjetaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedEmpleadosRoute: typeof AuthenticatedEmpleadosRoute
+  AuthenticatedPropietarioRoute: typeof AuthenticatedPropietarioRoute
+  AuthenticatedTarjetaRoute: typeof AuthenticatedTarjetaRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedEmpleadosRoute: AuthenticatedEmpleadosRoute,
+  AuthenticatedPropietarioRoute: AuthenticatedPropietarioRoute,
+  AuthenticatedTarjetaRoute: AuthenticatedTarjetaRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AccesoRoute: AccesoRoute,
-  EmpleadosRoute: EmpleadosRoute,
-  PropietarioRoute: PropietarioRoute,
-  TarjetaRoute: TarjetaRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
