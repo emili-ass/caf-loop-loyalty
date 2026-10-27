@@ -5,7 +5,12 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 type CardRpc = { id: string; code: string };
-type PurchaseRpc = { stamps: number; rewards_available: number; reward_earned?: boolean; replayed?: boolean };
+type PurchaseRpc = {
+  stamps: number;
+  rewards_available: number;
+  reward_earned?: boolean;
+  replayed?: boolean;
+};
 type RedeemRpc = { rewards_available: number; replayed?: boolean };
 
 const URL = process.env.SUPABASE_URL!;
@@ -225,7 +230,8 @@ async function main() {
     _idempotency_key: rk,
   });
   ok(
-    (r1.data as RedeemRpc | null)?.rewards_available === 0 && (r1b.data as RedeemRpc | null)?.replayed === true,
+    (r1.data as RedeemRpc | null)?.rewards_available === 0 &&
+      (r1b.data as RedeemRpc | null)?.replayed === true,
     "reintento del mismo canje no descuenta dos veces",
   );
   const r2 = await empA.db.rpc("redeem_reward", {
