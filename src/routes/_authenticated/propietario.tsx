@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyMemberships } from "@/lib/staff";
-import { requireData } from "@/lib/query-results";
+import { requireCount, requireData } from "@/lib/query-results";
 
 export const Route = createFileRoute("/_authenticated/propietario")({
   head: () => ({
@@ -21,7 +21,7 @@ async function count(table: "loyalty_cards" | "stamp_events" | "redemptions" | "
   let q = supabase.from(table).select("id", { count: "exact", head: true }).eq("cafe_id", cafeId);
   if (since) q = q.gte("created_at", since);
   const result = await q;
-  return requireData(result, "No se pudieron obtener las estadísticas") ?? 0;
+  return requireCount(result, "No se pudieron obtener las estadísticas");
 }
 
 function Propietario() {
