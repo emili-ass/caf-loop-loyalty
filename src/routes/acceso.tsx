@@ -38,19 +38,19 @@ function Acceso() {
     try {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) return toast.error(error.message === "Invalid login credentials" ? "Correo o contraseña incorrectos." : error.message);
+        if (error) { toast.error(error.message === "Invalid login credentials" ? "Correo o contraseña incorrectos." : error.message); return; }
         navigate({ to: safePath(redirect) });
       } else if (mode === "registro") {
-        if (password.length < 8) return toast.error("La contraseña debe tener al menos 8 caracteres.");
+        if (password.length < 8) { toast.error("La contraseña debe tener al menos 8 caracteres."); return; }
         const { error } = await supabase.auth.signUp({
           email, password,
           options: { emailRedirectTo: window.location.origin + "/tarjeta", data: { display_name: name.trim().slice(0, 80) } },
         });
-        if (error) return toast.error(error.message);
+        if (error) { toast.error(error.message); return; }
         setSent("Te enviamos un correo para confirmar tu cuenta. Ábrelo y luego inicia sesión.");
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/reset-password" });
-        if (error) return toast.error(error.message);
+        if (error) { toast.error(error.message); return; }
         setSent("Si existe una cuenta con ese correo, recibirás un enlace para cambiar tu contraseña.");
       }
     } finally {
@@ -61,7 +61,7 @@ function Acceso() {
   async function google() {
     sessionStorage.setItem("post_auth_redirect", safePath(redirect));
     const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/acceso" });
-    if (r.error) return toast.error("No se pudo iniciar sesión con Google.");
+    if (r.error) { toast.error("No se pudo iniciar sesión con Google."); return; }
     if (r.redirected) return;
     navigate({ to: safePath(redirect) });
   }

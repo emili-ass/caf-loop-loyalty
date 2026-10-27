@@ -22,11 +22,11 @@ function ResetPassword() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 8) return toast.error("Usa al menos 8 caracteres.");
+    if (password.length < 8) { toast.error("Usa al menos 8 caracteres."); return; }
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password });
     setBusy(false);
-    if (error) return toast.error("El enlace no es válido o expiró. Pide uno nuevo.");
+    if (error) { toast.error("El enlace no es válido o expiró. Pide uno nuevo."); return; }
     toast.success("Contraseña actualizada.");
     navigate({ to: "/tarjeta" });
   }
