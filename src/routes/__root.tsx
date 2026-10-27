@@ -13,6 +13,7 @@ import { useEffect, type ReactNode } from "react";
 import { SiteNav } from "../components/SiteNav";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { safeAuthPath } from "@/lib/auth-redirect";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -126,15 +127,22 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event) => {
+    let previousUserId: string | undefined;
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "INITIAL_SESSION") {
+        previousUserId = session?.user.id;
+        return;
+      }
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      if (event === "SIGNED_OUT" || session?.user.id !== previousUserId) queryClient.clear();
+      previousUserId = session?.user.id;
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
       if (event === "SIGNED_IN") {
         const next = sessionStorage.getItem("post_auth_redirect");
         if (next) {
           sessionStorage.removeItem("post_auth_redirect");
-          router.navigate({ to: next });
+          router.navigate({ to: safeAuthPath(next) });
         }
       }
     });

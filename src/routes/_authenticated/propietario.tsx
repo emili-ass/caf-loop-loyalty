@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchOwnerStats } from "@/lib/loyalty.queries";
 import { fetchMyMemberships } from "@/lib/staff";
 
 export const Route = createFileRoute("/_authenticated/propietario")({
@@ -16,15 +16,13 @@ export const Route = createFileRoute("/_authenticated/propietario")({
   component: Propietario,
 });
 
-async function count(table: "loyalty_cards" | "stamp_events" | "redemptions" | "purchases", cafeId: string, since?: string) {
-  let q = supabase.from(table).select("id", { count: "exact", head: true }).eq("cafe_id", cafeId);
-  if (since) q = q.gte("created_at", since);
-  const { count } = await q;
-  return count ?? 0;
-}
-
 function Propietario() {
-  const { data: memberships, isLoading } = useQuery({ queryKey: ["memberships"], queryFn: fetchMyMemberships });
+  const {
+    data: memberships,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({ queryKey: ["memberships"], queryFn: fetchMyMemberships });
   const owned = (memberships ?? []).filter((m) => m.role === "owner");
   const [cafeId, setCafeId] = useState("");
   useEffect(() => {
@@ -34,29 +32,39 @@ function Propietario() {
   const stats = useQuery({
     queryKey: ["owner-stats", cafeId],
     enabled: !!cafeId,
-    queryFn: async () => {
-      const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-      const [customers, stampsMonth, redeemed, purchases, recent] = await Promise.all([
-        count("loyalty_cards", cafeId),
-        count("stamp_events", cafeId, monthStart),
-        count("redemptions", cafeId),
-        count("purchases", cafeId),
-        supabase.from("purchases").select("id, amount, created_at, verification").eq("cafe_id", cafeId).order("created_at", { ascending: false }).limit(10),
-      ]);
-      return { customers, stampsMonth, redeemed, purchases, recent: recent.data ?? [] };
-    },
+    queryFn: () => fetchOwnerStats(cafeId),
   });
 
   if (isLoading) return <p className="pt-10 text-center text-muted-foreground">Cargando…</p>;
+  if (isError)
+    return (
+      <div role="alert" className="space-y-3 pt-10 text-center">
+        <p>No se pudo verificar tu acceso.</p>
+        <button className="btn-primary" onClick={() => refetch()}>
+          Reintentar
+        </button>
+      </div>
+    );
   if (!owned.length)
     return (
       <div className="card-soft mx-auto mt-6 max-w-md p-6 text-center">
         <h1 className="text-2xl">Sin acceso de propietario</h1>
-        <p className="mt-2 text-muted-foreground">Tu cuenta no es propietaria de ninguna cafetería.</p>
+        <p className="mt-2 text-muted-foreground">
+          Tu cuenta no es propietaria de ninguna cafetería.
+        </p>
       </div>
     );
 
   const s = stats.data;
+  if (stats.isError)
+    return (
+      <div role="alert" className="space-y-3 pt-10 text-center">
+        <p>No se pudieron cargar las estadísticas.</p>
+        <button className="btn-primary" onClick={() => stats.refetch()}>
+          Reintentar
+        </button>
+      </div>
+    );
   const cards = [
     { label: "Clientes con tarjeta", value: s?.customers },
     { label: "Sellos este mes", value: s?.stampsMonth },
@@ -70,8 +78,16 @@ function Propietario() {
         <h1 className="text-4xl">{owned.find((o) => o.cafeId === cafeId)?.name ?? "Resumen"}</h1>
       </div>
       {owned.length > 1 && (
-        <select className="field max-w-xs" value={cafeId} onChange={(e) => setCafeId(e.target.value)}>
-          {owned.map((m) => <option key={m.cafeId} value={m.cafeId}>{m.name}</option>)}
+        <select
+          className="field max-w-xs"
+          value={cafeId}
+          onChange={(e) => setCafeId(e.target.value)}
+        >
+          {owned.map((m) => (
+            <option key={m.cafeId} value={m.cafeId}>
+              {m.name}
+            </option>
+          ))}
         </select>
       )}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
