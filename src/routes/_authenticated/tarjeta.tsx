@@ -6,6 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { joinCafe } from "@/lib/loyalty.functions";
+import { requireData } from "@/lib/query-results";
 
 const STAMPS_TOTAL = 8;
 
@@ -26,7 +27,7 @@ function Tarjeta() {
   const join = useServerFn(joinCafe);
   const [joining, setJoining] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["my-cards"],
     queryFn: async () => {
       const [{ data: u }, cafes, cards, profile] = await Promise.all([
@@ -35,20 +36,26 @@ function Tarjeta() {
         supabase.from("loyalty_cards").select("id, cafe_id, code, stamps, rewards_available"),
         supabase.from("profiles").select("display_name").maybeSingle(),
       ]);
-      return { cafes: cafes.data ?? [], cards: cards.data ?? [], name: profile.data?.display_name ?? u.user?.email ?? "" };
+      return { cafes: requireData(cafes, "No se pudieron obtener las cafeterías") ?? [], cards: requireData(cards, "No se pudieron obtener las tarjetas") ?? [], name: requireData(profile, "No se pudo obtener el perfil")?.display_name ?? u.user?.email ?? "" };
     },
   });
 
-  if (isLoading || !data) return <p className="pt-10 text-center text-muted-foreground">Cargando…</p>;
+  if (isLoading) return <p className="pt-10 text-center text-muted-foreground">Cargando…</p>;
+  if (isError || !data) return <div role="alert" className="mx-auto max-w-lg space-y-3 pt-10 text-center"><p>No se pudieron cargar tus tarjetas.</p><button className="btn-primary" onClick={() => void refetch()}>Reintentar</button></div>;
   const joinable = data.cafes.filter((c) => !data.cards.some((k) => k.cafe_id === c.id));
 
   async function onJoin(cafeId: string) {
     setJoining(cafeId);
-    const r = await join({ data: { cafeId } });
-    setJoining(null);
-    if (!r.ok) { toast.error(r.error); return; }
-    toast.success("Tarjeta creada");
-    qc.invalidateQueries({ queryKey: ["my-cards"] });
+    try {
+      const r = await join({ data: { cafeId } });
+      if (!r.ok) { toast.error(r.error); return; }
+      toast.success("Tarjeta creada");
+      await qc.invalidateQueries({ queryKey: ["my-cards"] });
+    } catch {
+      toast.error("No se pudo conectar. Intenta nuevamente.");
+    } finally {
+      setJoining(null);
+    }
   }
 
   return (
