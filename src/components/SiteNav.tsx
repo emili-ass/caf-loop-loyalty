@@ -2,6 +2,8 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const links = [
   { to: "/", label: "Inicio" },
@@ -14,19 +16,42 @@ export function SiteNav() {
   const { user, ready } = useSession();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const [signingOut, setSigningOut] = useState(false);
   async function signOut() {
-    await qc.cancelQueries();
-    qc.clear();
-    await supabase.auth.signOut();
-    navigate({ to: "/acceso", replace: true });
+    setSigningOut(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      await qc.cancelQueries();
+      qc.clear();
+      await navigate({ to: "/acceso", replace: true });
+    } catch {
+      toast.error("No se pudo cerrar sesión. Inténtalo de nuevo.");
+    } finally {
+      setSigningOut(false);
+    }
   }
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <Link to="/" className="flex items-center gap-2 font-display text-xl font-semibold text-primary">
+        <Link
+          to="/"
+          className="flex items-center gap-2 font-display text-xl font-semibold text-primary"
+        >
           <svg aria-hidden="true" viewBox="0 0 32 32" className="h-6 w-6 shrink-0" fill="none">
-            <path d="M9 8.5a11 11 0 1 1-1 15" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" />
-            <path d="M7 17v7h7" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M9 8.5a11 11 0 1 1-1 15"
+              stroke="currentColor"
+              strokeWidth="3.2"
+              strokeLinecap="round"
+            />
+            <path
+              d="M7 17v7h7"
+              stroke="currentColor"
+              strokeWidth="3.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
           <span className="tracking-[-0.05em]">loop.</span>
         </Link>
@@ -42,11 +67,24 @@ export function SiteNav() {
               {l.label}
             </Link>
           ))}
-          {ready && (user ? (
-            <button onClick={signOut} className="rounded-full px-3 py-1.5 text-muted-foreground">Salir</button>
-          ) : (
-            <Link to="/acceso" className="rounded-full px-3 py-1.5" activeProps={{ className: "bg-secondary text-secondary-foreground font-medium" }}>Acceso</Link>
-          ))}
+          {ready &&
+            (user ? (
+              <button
+                disabled={signingOut}
+                onClick={signOut}
+                className="rounded-full px-3 py-1.5 text-muted-foreground"
+              >
+                Salir
+              </button>
+            ) : (
+              <Link
+                to="/acceso"
+                className="rounded-full px-3 py-1.5"
+                activeProps={{ className: "bg-secondary text-secondary-foreground font-medium" }}
+              >
+                Acceso
+              </Link>
+            ))}
         </nav>
       </div>
     </header>

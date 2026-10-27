@@ -22,23 +22,44 @@ function ResetPassword() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 8) { toast.error("Usa al menos 8 caracteres."); return; }
+    if (password.length < 8) {
+      toast.error("Usa al menos 8 caracteres.");
+      return;
+    }
     setBusy(true);
-    const { error } = await supabase.auth.updateUser({ password });
-    setBusy(false);
-    if (error) { toast.error("El enlace no es válido o expiró. Pide uno nuevo."); return; }
-    toast.success("Contraseña actualizada.");
-    navigate({ to: "/tarjeta" });
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) {
+        toast.error("El enlace no es válido o expiró. Pide uno nuevo.");
+        return;
+      }
+      toast.success("Contraseña actualizada.");
+      navigate({ to: "/tarjeta" });
+    } catch {
+      toast.error("No se pudo conectar. Inténtalo de nuevo.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
     <div className="mx-auto max-w-md space-y-5 pt-6">
       <h1 className="text-center text-4xl">Nueva contraseña</h1>
       <form className="card-soft space-y-4 p-6" onSubmit={onSubmit}>
-        <label className="block text-sm">Contraseña nueva
-          <input type="password" className="field mt-1" value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required />
+        <label className="block text-sm">
+          Contraseña nueva
+          <input
+            type="password"
+            className="field mt-1"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={8}
+            required
+          />
         </label>
-        <button type="submit" disabled={busy} className="btn-primary w-full">{busy ? "Guardando…" : "Guardar contraseña"}</button>
+        <button type="submit" disabled={busy} className="btn-primary w-full">
+          {busy ? "Guardando…" : "Guardar contraseña"}
+        </button>
       </form>
     </div>
   );

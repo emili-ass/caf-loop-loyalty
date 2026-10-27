@@ -6,11 +6,15 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "build:pages": "vite build --mode pages",
+    "typecheck": "tsc --noEmit",
+    "check:supabase": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/check-supabase.mjs",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
+    "test:security": "node --env-file=.env.local supabase/tests/security.e2e.ts",
     "test:watch": "vitest"
   },
   "overrides": {
