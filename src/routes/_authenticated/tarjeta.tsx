@@ -46,7 +46,7 @@ function Tarjeta() {
     setJoining(cafeId);
     const r = await join({ data: { cafeId } });
     setJoining(null);
-    if (!r.ok) return toast.error(r.error);
+    if (!r.ok) { toast.error(r.error); return; }
     toast.success("Tarjeta creada");
     qc.invalidateQueries({ queryKey: ["my-cards"] });
   }

@@ -63,11 +63,11 @@ function PurchaseForm({ cafeId }: { cafeId: string }) {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const value = Number(amount);
-    if (!code.trim() || !(value > 0)) return toast.error("Escribe el código de tarjeta y el monto.");
+    if (!code.trim() || !(value > 0)) { toast.error("Escribe el código de tarjeta y el monto."); return; }
     setBusy(true);
     try {
       const r = await submit({ data: { cafeId, cardCode: code, amount: value, idempotencyKey: key } });
-      if (!r.ok) return toast.error(r.error);
+      if (!r.ok) { toast.error(r.error); return; }
       const res = r.result;
       toast.success(res.replayed ? "Esta compra ya estaba registrada." : res.reward_earned ? "¡Tarjeta completa! El cliente ganó una recompensa." : `Sello otorgado. Lleva ${res.stamps} de 8.`);
       setCode(""); setAmount(""); setKey(newIdempotencyKey());
@@ -103,11 +103,11 @@ function RedeemForm({ cafeId }: { cafeId: string }) {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!code.trim()) return toast.error("Escribe el código de tarjeta.");
+    if (!code.trim()) { toast.error("Escribe el código de tarjeta."); return; }
     setBusy(true);
     try {
       const r = await submit({ data: { cafeId, cardCode: code, idempotencyKey: key } });
-      if (!r.ok) return toast.error(r.error);
+      if (!r.ok) { toast.error(r.error); return; }
       toast.success(r.result.replayed ? "Este canje ya estaba registrado." : "Recompensa canjeada.");
       setCode(""); setKey(newIdempotencyKey());
     } catch {
