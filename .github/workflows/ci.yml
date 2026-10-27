@@ -4,6 +4,13 @@ on:
     branches: [main, "fix/**", "design/**"]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      run_database_e2e:
+        description: 'Ejecutar pruebas reales SOLO en un proyecto Supabase aislado'
+        required: true
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -22,3 +29,24 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
           SUPABASE_URL: https://example.supabase.co
           SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+
+  database-e2e:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_database_e2e == true }}
+    runs-on: ubuntu-latest
+    environment: loop-e2e
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Run isolated Supabase security and loyalty E2E
+        env:
+          SUPABASE_URL: ${{ secrets.LOOP_E2E_SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.LOOP_E2E_SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.LOOP_E2E_SUPABASE_SERVICE_ROLE_KEY }}
+          LOOP_E2E_CONFIRM: RUN_ON_ISOLATED_TEST_PROJECT
+        run: |
+          test -n "$SUPABASE_URL" || { echo 'Falta URL del proyecto de pruebas'; exit 1; }
+          test -n "$SUPABASE_PUBLISHABLE_KEY" || { echo 'Falta clave pública del proyecto de pruebas'; exit 1; }
+          test -n "$SUPABASE_SERVICE_ROLE_KEY" || { echo 'Falta clave privada del proyecto de pruebas'; exit 1; }
+          bun supabase/tests/security.e2e.ts
