@@ -1,0 +1,27 @@
+name: Loop checks
+on:
+  push:
+    branches: [main, "fix/**", "design/**"]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run test
+      - run: npm run lint
+      - run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+          SUPABASE_URL: https://example.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
