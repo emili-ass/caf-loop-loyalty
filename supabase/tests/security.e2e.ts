@@ -4,6 +4,10 @@
 // Ejecutar: bun supabase/tests/security.e2e.ts
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+type CardRpc = { id: string; code: string };
+type PurchaseRpc = { stamps: number; rewards_available: number; reward_earned?: boolean; replayed?: boolean };
+type RedeemRpc = { rewards_available: number; replayed?: boolean };
+
 const URL = process.env.SUPABASE_URL!;
 const ANON = process.env.SUPABASE_PUBLISHABLE_KEY!;
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -71,11 +75,11 @@ async function main() {
   ok(prof.data?.display_name === "Ficticio cliente1", "al registrarse se crea el perfil");
 
   // Tarjetas y códigos
-  const c1A = (await c1.db.rpc("join_cafe", { _cafe_id: A })).data as any;
-  const c1B = (await c1.db.rpc("join_cafe", { _cafe_id: B })).data as any;
-  const c2A = (await c2.db.rpc("join_cafe", { _cafe_id: A })).data as any;
+  const c1A = (await c1.db.rpc("join_cafe", { _cafe_id: A })).data as CardRpc;
+  const c1B = (await c1.db.rpc("join_cafe", { _cafe_id: B })).data as CardRpc;
+  const c2A = (await c2.db.rpc("join_cafe", { _cafe_id: A })).data as CardRpc;
   createdCards.push(c1A.id, c1B.id, c2A.id);
-  const again = (await c1.db.rpc("join_cafe", { _cafe_id: A })).data as any;
+  const again = (await c1.db.rpc("join_cafe", { _cafe_id: A })).data as CardRpc;
   ok(again.id === c1A.id, "unirse dos veces no crea una segunda tarjeta");
   const re = /^CL-[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/;
   ok(
@@ -145,7 +149,7 @@ async function main() {
   ok((anonCafes.data?.length ?? 0) >= 2, "datos públicos de cafeterías visibles sin sesión");
 
   // 8 sellos = 1 recompensa
-  let last: any;
+  let last: PurchaseRpc | null = null;
   for (let i = 0; i < 8; i++) {
     {
       const rr = await empA.db.rpc("register_purchase", {
@@ -154,7 +158,7 @@ async function main() {
         _amount: 55,
         _idempotency_key: key(`p${i}`),
       });
-      last = rr.data;
+      last = rr.data as PurchaseRpc | null;
     }
   }
   ok(
@@ -182,7 +186,7 @@ async function main() {
     _idempotency_key: k,
   });
   ok(
-    !first.error && (replay.data as any)?.replayed === true,
+    !first.error && (replay.data as PurchaseRpc | null)?.replayed === true,
     "misma clave y mismos datos devuelve el resultado anterior",
   );
   const diffAmount = await empA.db.rpc("register_purchase", {
@@ -221,7 +225,7 @@ async function main() {
     _idempotency_key: rk,
   });
   ok(
-    (r1.data as any)?.rewards_available === 0 && (r1b.data as any)?.replayed === true,
+    (r1.data as RedeemRpc | null)?.rewards_available === 0 && (r1b.data as RedeemRpc | null)?.replayed === true,
     "reintento del mismo canje no descuenta dos veces",
   );
   const r2 = await empA.db.rpc("redeem_reward", {
