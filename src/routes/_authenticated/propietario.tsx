@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyMemberships } from "@/lib/staff";
+import { requireData } from "@/lib/query-results";
 
 export const Route = createFileRoute("/_authenticated/propietario")({
   head: () => ({
@@ -19,8 +20,8 @@ export const Route = createFileRoute("/_authenticated/propietario")({
 async function count(table: "loyalty_cards" | "stamp_events" | "redemptions" | "purchases", cafeId: string, since?: string) {
   let q = supabase.from(table).select("id", { count: "exact", head: true }).eq("cafe_id", cafeId);
   if (since) q = q.gte("created_at", since);
-  const { count } = await q;
-  return count ?? 0;
+  const result = await q;
+  return requireData(result, "No se pudieron obtener las estadísticas") ?? 0;
 }
 
 function Propietario() {
@@ -43,7 +44,7 @@ function Propietario() {
         count("purchases", cafeId),
         supabase.from("purchases").select("id, amount, created_at, verification").eq("cafe_id", cafeId).order("created_at", { ascending: false }).limit(10),
       ]);
-      return { customers, stampsMonth, redeemed, purchases, recent: recent.data ?? [] };
+      return { customers, stampsMonth, redeemed, purchases, recent: requireData(recent, "No se pudieron obtener las últimas compras") ?? [] };
     },
   });
 
@@ -74,6 +75,7 @@ function Propietario() {
           {owned.map((m) => <option key={m.cafeId} value={m.cafeId}>{m.name}</option>)}
         </select>
       )}
+      {stats.isError && <p role="alert" className="rounded-xl border border-destructive p-4 text-destructive">No se pudieron cargar las estadísticas. Revisa la conexión o los permisos e inténtalo de nuevo.</p>}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {cards.map((c) => (
           <div key={c.label} className="card-soft p-5">
