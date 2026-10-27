@@ -19,6 +19,10 @@ export default (env: ConfigEnv) => {
     });
   }
   return defineConfig({
+    vite: {
+      server: { allowedHosts: ["caf-loop-loyalty-2.onrender.com"] },
+      preview: { allowedHosts: ["caf-loop-loyalty-2.onrender.com"] },
+    },
     ...(env.mode === "pages"
       ? { nitro: { preset: "cloudflare-pages", cloudflare: { nodeCompat: true } } }
       : {}),
