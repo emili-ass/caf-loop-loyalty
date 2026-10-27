@@ -6,15 +6,21 @@ describe("Supabase result safety", () => {
     expect(requireCount({ count: 0, error: null }, "stats")).toBe(0);
   });
   it("rejects failed count queries rather than displaying zero", () => {
-    expect(() => requireCount({ count: null, error: { message: "permission denied" } }, "stats")).toThrow(/permission denied/);
+    expect(() =>
+      requireCount({ count: null, error: { message: "permission denied" } }, "stats"),
+    ).toThrow(/permission denied/);
   });
   it("rejects missing counts", () => {
-    expect(() => requireCount({ count: null, error: null }, "stats")).toThrow(/conteo no disponible/);
+    expect(() => requireCount({ count: null, error: null }, "stats")).toThrow(
+      /conteo no disponible/,
+    );
   });
   it("returns empty lists when genuinely empty", () => {
     expect(requireData({ data: [], error: null }, "cards")).toEqual([]);
   });
   it("rejects failed card queries", () => {
-    expect(() => requireData({ data: null, error: { message: "network error" } }, "cards")).toThrow(/network error/);
+    expect(() => requireData({ data: null, error: { message: "network error" } }, "cards")).toThrow(
+      /network error/,
+    );
   });
 });

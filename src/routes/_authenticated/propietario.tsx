@@ -17,7 +17,11 @@ export const Route = createFileRoute("/_authenticated/propietario")({
   component: Propietario,
 });
 
-async function count(table: "loyalty_cards" | "stamp_events" | "redemptions" | "purchases", cafeId: string, since?: string) {
+async function count(
+  table: "loyalty_cards" | "stamp_events" | "redemptions" | "purchases",
+  cafeId: string,
+  since?: string,
+) {
   let q = supabase.from(table).select("id", { count: "exact", head: true }).eq("cafe_id", cafeId);
   if (since) q = q.gte("created_at", since);
   const result = await q;
@@ -25,7 +29,10 @@ async function count(table: "loyalty_cards" | "stamp_events" | "redemptions" | "
 }
 
 function Propietario() {
-  const { data: memberships, isLoading } = useQuery({ queryKey: ["memberships"], queryFn: fetchMyMemberships });
+  const { data: memberships, isLoading } = useQuery({
+    queryKey: ["memberships"],
+    queryFn: fetchMyMemberships,
+  });
   const owned = (memberships ?? []).filter((m) => m.role === "owner");
   const [cafeId, setCafeId] = useState("");
   useEffect(() => {
@@ -42,9 +49,20 @@ function Propietario() {
         count("stamp_events", cafeId, monthStart),
         count("redemptions", cafeId),
         count("purchases", cafeId),
-        supabase.from("purchases").select("id, amount, created_at, verification").eq("cafe_id", cafeId).order("created_at", { ascending: false }).limit(10),
+        supabase
+          .from("purchases")
+          .select("id, amount, created_at, verification")
+          .eq("cafe_id", cafeId)
+          .order("created_at", { ascending: false })
+          .limit(10),
       ]);
-      return { customers, stampsMonth, redeemed, purchases, recent: requireData(recent, "No se pudieron obtener las últimas compras") ?? [] };
+      return {
+        customers,
+        stampsMonth,
+        redeemed,
+        purchases,
+        recent: requireData(recent, "No se pudieron obtener las últimas compras") ?? [],
+      };
     },
   });
 
@@ -53,7 +71,9 @@ function Propietario() {
     return (
       <div className="card-soft mx-auto mt-6 max-w-md p-6 text-center">
         <h1 className="text-2xl">Sin acceso de propietario</h1>
-        <p className="mt-2 text-muted-foreground">Tu cuenta no es propietaria de ninguna cafetería.</p>
+        <p className="mt-2 text-muted-foreground">
+          Tu cuenta no es propietaria de ninguna cafetería.
+        </p>
       </div>
     );
 
@@ -71,11 +91,24 @@ function Propietario() {
         <h1 className="text-4xl">{owned.find((o) => o.cafeId === cafeId)?.name ?? "Resumen"}</h1>
       </div>
       {owned.length > 1 && (
-        <select className="field max-w-xs" value={cafeId} onChange={(e) => setCafeId(e.target.value)}>
-          {owned.map((m) => <option key={m.cafeId} value={m.cafeId}>{m.name}</option>)}
+        <select
+          className="field max-w-xs"
+          value={cafeId}
+          onChange={(e) => setCafeId(e.target.value)}
+        >
+          {owned.map((m) => (
+            <option key={m.cafeId} value={m.cafeId}>
+              {m.name}
+            </option>
+          ))}
         </select>
       )}
-      {stats.isError && <p role="alert" className="rounded-xl border border-destructive p-4 text-destructive">No se pudieron cargar las estadísticas. Revisa la conexión o los permisos e inténtalo de nuevo.</p>}
+      {stats.isError && (
+        <p role="alert" className="rounded-xl border border-destructive p-4 text-destructive">
+          No se pudieron cargar las estadísticas. Revisa la conexión o los permisos e inténtalo de
+          nuevo.
+        </p>
+      )}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {cards.map((c) => (
           <div key={c.label} className="card-soft p-5">

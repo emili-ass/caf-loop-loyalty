@@ -24,7 +24,10 @@ export function SiteNav() {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <Link to="/" className="flex items-center gap-2 font-display text-xl font-semibold text-primary">
+        <Link
+          to="/"
+          className="flex items-center gap-2 font-display text-xl font-semibold text-primary"
+        >
           <Coffee className="h-5 w-5" /> CaféLoop
         </Link>
         <nav className="-mx-1 flex gap-1 overflow-x-auto text-sm">
@@ -39,11 +42,20 @@ export function SiteNav() {
               {l.label}
             </Link>
           ))}
-          {ready && (user ? (
-            <button onClick={signOut} className="rounded-full px-3 py-1.5 text-muted-foreground">Salir</button>
-          ) : (
-            <Link to="/acceso" className="rounded-full px-3 py-1.5" activeProps={{ className: "bg-secondary text-secondary-foreground font-medium" }}>Acceso</Link>
-          ))}
+          {ready &&
+            (user ? (
+              <button onClick={signOut} className="rounded-full px-3 py-1.5 text-muted-foreground">
+                Salir
+              </button>
+            ) : (
+              <Link
+                to="/acceso"
+                className="rounded-full px-3 py-1.5"
+                activeProps={{ className: "bg-secondary text-secondary-foreground font-medium" }}
+              >
+                Acceso
+              </Link>
+            ))}
         </nav>
       </div>
     </header>
