@@ -17,6 +17,12 @@ const URL = process.env.SUPABASE_URL!;
 const ANON = process.env.SUPABASE_PUBLISHABLE_KEY!;
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 if (!URL || !ANON || !SERVICE) throw new Error("Faltan variables de entorno de Cloud");
+if (process.env.LOOP_E2E_CONFIRM !== "RUN_ON_ISOLATED_TEST_PROJECT") {
+  throw new Error("Pruebas E2E bloqueadas: confirma un proyecto de pruebas aislado con LOOP_E2E_CONFIRM");
+}
+if (!URL.startsWith("https://") || !new URL(URL).hostname.endsWith(".supabase.co")) {
+  throw new Error("La URL de Supabase debe ser un proyecto de pruebas HTTPS válido");
+}
 
 const opts = { auth: { persistSession: false, autoRefreshToken: false } };
 const admin = createClient(URL, SERVICE, opts);
@@ -55,9 +61,11 @@ async function user(label: string): Promise<{ id: string; db: SupabaseClient }> 
 }
 
 async function main() {
-  const { data: cafes } = await admin.from("cafes").select("id, slug");
-  const A = cafes!.find((c) => c.slug === "la-molienda")!.id;
-  const B = cafes!.find((c) => c.slug === "tueste-norte")!.id;
+  const { data: cafes, error: cafesError } = await admin.from("cafes").select("id, slug");
+  if (cafesError) throw cafesError;
+  const A = cafes?.find((c) => c.slug === "la-molienda")?.id;
+  const B = cafes?.find((c) => c.slug === "tueste-norte")?.id;
+  if (!A || !B || A === B) throw new Error("Se requieren dos cafeterías de prueba: la-molienda y tueste-norte");
 
   const owner = await user("owner-a");
   const empA = await user("emp-a");
@@ -363,9 +371,18 @@ try {
   failed.push(`error inesperado: ${(e as Error).message}`);
   console.error(e);
 } finally {
-  if (createdCards.length) await admin.from("loyalty_cards").delete().in("id", createdCards);
-  if (createdUsers.length) await admin.from("cafe_members").delete().in("user_id", createdUsers);
-  for (const id of createdUsers) await admin.auth.admin.deleteUser(id);
+  if (createdCards.length) {
+    const result = await admin.from("loyalty_cards").delete().in("id", createdCards);
+    if (result.error) failed.push(`limpieza de tarjetas: ${result.error.message}`);
+  }
+  if (createdUsers.length) {
+    const result = await admin.from("cafe_members").delete().in("user_id", createdUsers);
+    if (result.error) failed.push(`limpieza de miembros: ${result.error.message}`);
+  }
+  for (const id of createdUsers) {
+    const result = await admin.auth.admin.deleteUser(id);
+    if (result.error) failed.push(`limpieza de usuario ${id}: ${result.error.message}`);
+  }
   console.log(`\n${passed} pasaron, ${failed.length} fallaron`);
   if (failed.length) {
     console.log(failed.map((f) => " - " + f).join("\n"));
