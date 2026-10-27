@@ -1,15 +1,26 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@/hooks/use-session";
 import { Coffee } from "lucide-react";
 
 const links = [
   { to: "/", label: "Cafetería" },
-  { to: "/acceso", label: "Acceso" },
   { to: "/tarjeta", label: "Mi tarjeta" },
   { to: "/empleados", label: "Empleados" },
   { to: "/propietario", label: "Propietario" },
 ] as const;
 
 export function SiteNav() {
+  const { user, ready } = useSession();
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  async function signOut() {
+    await qc.cancelQueries();
+    qc.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/acceso", replace: true });
+  }
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
@@ -27,6 +38,11 @@ export function SiteNav() {
             >
               {l.label}
             </Link>
+          ))}
+          {ready && (user ? (
+            <button onClick={signOut} className="rounded-full px-3 py-1.5 text-muted-foreground">Salir</button>
+          ) : (
+            <Link to="/acceso" className="rounded-full px-3 py-1.5" activeProps={{ className: "bg-secondary text-secondary-foreground font-medium" }}>Acceso</Link>
           ))}
         </nav>
       </div>
