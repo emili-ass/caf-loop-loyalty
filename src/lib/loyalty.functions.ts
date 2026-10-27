@@ -10,7 +10,8 @@ const ERRORS: Record<string, string> = {
   not_cafe_staff: "No eres personal activo de esta cafetería.",
   card_not_found: "No existe una tarjeta con ese código en esta cafetería.",
   invalid_amount: "El monto no es válido.",
-  idempotency_key_conflict: "Esta operación ya se registró con datos distintos. Recarga la página e inténtalo de nuevo.",
+  idempotency_key_conflict:
+    "Esta operación ya se registró con datos distintos. Recarga la página e inténtalo de nuevo.",
   no_reward_available: "El cliente no tiene recompensas disponibles.",
   cafe_not_found: "Cafetería no encontrada.",
 };
@@ -25,7 +26,14 @@ const codeSchema = z.string().trim().min(6).max(40);
 export const registerPurchase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ cafeId: z.string().uuid(), cardCode: codeSchema, amount: z.number().positive().lt(100000), idempotencyKey: keySchema }).parse(input),
+    z
+      .object({
+        cafeId: z.string().uuid(),
+        cardCode: codeSchema,
+        amount: z.number().positive().lt(100000),
+        idempotencyKey: keySchema,
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { data: result, error } = await context.supabase.rpc("register_purchase", {
@@ -35,13 +43,23 @@ export const registerPurchase = createServerFn({ method: "POST" })
       _idempotency_key: data.idempotencyKey,
     });
     if (error) return { ok: false as const, error: friendly(error.message) };
-    return { ok: true as const, result: result as { replayed: boolean; stamps: number; rewards_available: number; reward_earned?: boolean } };
+    return {
+      ok: true as const,
+      result: result as {
+        replayed: boolean;
+        stamps: number;
+        rewards_available: number;
+        reward_earned?: boolean;
+      },
+    };
   });
 
 export const redeemReward = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ cafeId: z.string().uuid(), cardCode: codeSchema, idempotencyKey: keySchema }).parse(input),
+    z
+      .object({ cafeId: z.string().uuid(), cardCode: codeSchema, idempotencyKey: keySchema })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { data: result, error } = await context.supabase.rpc("redeem_reward", {
@@ -50,7 +68,10 @@ export const redeemReward = createServerFn({ method: "POST" })
       _idempotency_key: data.idempotencyKey,
     });
     if (error) return { ok: false as const, error: friendly(error.message) };
-    return { ok: true as const, result: result as { replayed: boolean; rewards_available: number } };
+    return {
+      ok: true as const,
+      result: result as { replayed: boolean; rewards_available: number },
+    };
   });
 
 export const joinCafe = createServerFn({ method: "POST" })

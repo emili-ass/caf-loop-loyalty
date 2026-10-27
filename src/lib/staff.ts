@@ -8,7 +8,11 @@ export async function fetchMyMemberships() {
     .select("cafe_id, role, active, cafes(name)")
     .eq("user_id", u.user.id)
     .eq("active", true);
-  return (data ?? []).map((m) => ({ cafeId: m.cafe_id, role: m.role, name: (m.cafes as { name: string } | null)?.name ?? "" }));
+  return (data ?? []).map((m) => ({
+    cafeId: m.cafe_id,
+    role: m.role,
+    name: (m.cafes as { name: string } | null)?.name ?? "",
+  }));
 }
 
 export function newIdempotencyKey() {
