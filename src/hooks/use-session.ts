@@ -6,12 +6,33 @@ export function useSession() {
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setReady(true);
+    let active = true;
+    let receivedEvent = false;
+    const { data } = supabase.auth.onAuthStateChange((_e, s) => {
+      receivedEvent = true;
+      if (active) {
+        setSession(s);
+        setReady(true);
+      }
     });
-    return () => data.subscription.unsubscribe();
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (active && !receivedEvent) {
+          setSession(data.session);
+          setReady(true);
+        }
+      })
+      .catch(() => {
+        if (active && !receivedEvent) {
+          setSession(null);
+          setReady(true);
+        }
+      });
+    return () => {
+      active = false;
+      data.subscription.unsubscribe();
+    };
   }, []);
   return { session, user: session?.user ?? null, ready };
 }

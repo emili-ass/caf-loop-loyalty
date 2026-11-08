@@ -22,6 +22,9 @@ No agregues pagos, notificaciones automáticas ni integración con Wallet todav�
 
 This project was built with [Lovable](https://lovable.dev).
 
+Supabase configuration, database security, and Cloudflare preview instructions:
+[integration setup](docs/supabase-setup.md) and [validation report](docs/supabase-validation.md).
+
 ## Build with Lovable
 
 Continue developing this project in the [Lovable editor](https://lovable.dev/projects/dce2c324-0eac-4549-b2af-7285c3bae77f).

@@ -1,1 +1,5 @@
 project_id = "zvhqhrgxljqgyfulkxkv"
+
+# Local development only. Hosted Auth must be configured separately.
+[auth.email]
+enable_confirmations = false
