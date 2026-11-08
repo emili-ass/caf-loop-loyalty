@@ -4,7 +4,7 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
+    "dev": "npm start",
     "build": "vite build",
     "build:pages": "vite build --mode pages",
     "typecheck": "tsc --noEmit",
@@ -16,7 +16,8 @@
     "test": "vitest run",
     "test:security": "node --env-file=.env.local supabase/tests/security.e2e.ts",
     "test:watch": "vitest",
-    "start": "node .output/server/index.mjs"
+    "start": "node .output/server/index.mjs",
+    "dev:local": "vite dev"
   },
   "overrides": {
     "rolldown": "1.2.1"
