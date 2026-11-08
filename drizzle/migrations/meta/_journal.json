@@ -8,6 +8,13 @@
       "when": 1793052498697,
       "tag": "0000_loyalty_core",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793509213264,
+      "tag": "0001_ten_stamp_welcome",
+      "breakpoints": true
     }
   ]
 }

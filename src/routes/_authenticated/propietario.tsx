@@ -3,13 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { fetchOwnerStats } from "@/lib/loyalty.queries";
 import { fetchMyMemberships } from "@/lib/staff";
+import { OwnerSalesChart } from "@/components/OwnerSalesChart";
+import { formatMoney, BUSINESS_TIME_ZONE } from "@/lib/purchase-analytics";
 
 export const Route = createFileRoute("/_authenticated/propietario")({
   head: () => ({
     meta: [
-      { title: "Panel del propietario — CaféLoop" },
+      { title: "Panel del propietario — Loop" },
       { name: "description", content: "Estadísticas básicas del programa de fidelización." },
-      { property: "og:title", content: "Panel del propietario — CaféLoop" },
+      { property: "og:title", content: "Panel del propietario — Loop" },
       { property: "og:description", content: "Clientes, sellos y recompensas de tu cafetería." },
     ],
   }),
@@ -98,14 +100,19 @@ function Propietario() {
           </div>
         ))}
       </div>
+      <OwnerSalesChart key={cafeId} cafeId={cafeId} />
       <div className="card-soft p-6">
         <h2 className="text-xl">Últimas compras</h2>
         {s?.recent.length ? (
           <ul className="mt-4 divide-y divide-border text-sm">
             {s.recent.map((p) => (
-              <li key={p.id} className="flex justify-between py-2">
-                <span>{new Date(p.created_at).toLocaleString("es-MX")}</span>
-                <span>${Number(p.amount).toFixed(2)} · confirmada por empleado</span>
+              <li key={p.id} className="flex flex-wrap justify-between gap-2 py-3">
+                <span>
+                  {new Date(p.created_at).toLocaleString("es-MX", { timeZone: BUSINESS_TIME_ZONE })}
+                </span>
+                <span>
+                  {formatMoney(Number(p.amount))} · {p.employeeName}
+                </span>
               </li>
             ))}
           </ul>

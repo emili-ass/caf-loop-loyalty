@@ -6,10 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "Nueva contraseña — CaféLoop" },
-      { name: "description", content: "Elige una nueva contraseña para tu cuenta de CaféLoop." },
-      { property: "og:title", content: "Nueva contraseña — CaféLoop" },
-      { property: "og:description", content: "Restablece tu contraseña de CaféLoop." },
+      { title: "Nueva contraseña — Loop" },
+      { name: "description", content: "Elige una nueva contraseña para tu cuenta de Loop." },
+      { property: "og:title", content: "Nueva contraseña — Loop" },
+      { property: "og:description", content: "Restablece tu contraseña de Loop." },
     ],
   }),
   component: ResetPassword,

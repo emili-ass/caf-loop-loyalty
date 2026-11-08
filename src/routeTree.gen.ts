@@ -16,6 +16,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedEmpleadosRouteImport } from './routes/_authenticated/empleados'
 import { Route as AuthenticatedPropietarioRouteImport } from './routes/_authenticated/propietario'
 import { Route as AuthenticatedTarjetaRouteImport } from './routes/_authenticated/tarjeta'
+import { Route as DemoCafeIdRouteImport } from './routes/demo.$cafeId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,6 +53,11 @@ const AuthenticatedTarjetaRoute = AuthenticatedTarjetaRouteImport.update({
   path: '/tarjeta',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const DemoCafeIdRoute = DemoCafeIdRouteImport.update({
+  id: '/demo/$cafeId',
+  path: '/demo/$cafeId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/empleados': typeof AuthenticatedEmpleadosRoute
   '/propietario': typeof AuthenticatedPropietarioRoute
   '/tarjeta': typeof AuthenticatedTarjetaRoute
+  '/demo/$cafeId': typeof DemoCafeIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/empleados': typeof AuthenticatedEmpleadosRoute
   '/propietario': typeof AuthenticatedPropietarioRoute
   '/tarjeta': typeof AuthenticatedTarjetaRoute
+  '/demo/$cafeId': typeof DemoCafeIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/_authenticated/empleados': typeof AuthenticatedEmpleadosRoute
   '/_authenticated/propietario': typeof AuthenticatedPropietarioRoute
   '/_authenticated/tarjeta': typeof AuthenticatedTarjetaRoute
+  '/demo/$cafeId': typeof DemoCafeIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/empleados'
     | '/propietario'
     | '/tarjeta'
+    | '/demo/$cafeId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/empleados'
     | '/propietario'
     | '/tarjeta'
+    | '/demo/$cafeId'
   id:
     | '__root__'
     | '/'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/_authenticated/empleados'
     | '/_authenticated/propietario'
     | '/_authenticated/tarjeta'
+    | '/demo/$cafeId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -112,6 +124,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AccesoRoute: typeof AccesoRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  DemoCafeIdRoute: typeof DemoCafeIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -165,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTarjetaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/demo/$cafeId': {
+      id: '/demo/$cafeId'
+      path: '/demo/$cafeId'
+      fullPath: '/demo/$cafeId'
+      preLoaderRoute: typeof DemoCafeIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -188,6 +208,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AccesoRoute: AccesoRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  DemoCafeIdRoute: DemoCafeIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

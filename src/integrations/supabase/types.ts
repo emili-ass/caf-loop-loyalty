@@ -45,6 +45,7 @@ export type Database = {
       };
       cafes: {
         Row: {
+          initial_stamps: number;
           address: string | null;
           created_at: string;
           hours: Json;
@@ -66,6 +67,7 @@ export type Database = {
           reward_description?: string;
           slug: string;
           stamps_required?: number;
+          initial_stamps?: number;
           tagline?: string | null;
         };
         Update: {
@@ -78,6 +80,7 @@ export type Database = {
           reward_description?: string;
           slug?: string;
           stamps_required?: number;
+          initial_stamps?: number;
           tagline?: string | null;
         };
         Relationships: [];

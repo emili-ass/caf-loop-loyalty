@@ -1,17 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { registerPurchase, redeemReward } from "@/lib/loyalty.functions";
 import { fetchMyMemberships, newIdempotencyKey } from "@/lib/staff";
+import { fetchCurrentEmployee } from "@/lib/loyalty.queries";
 
 export const Route = createFileRoute("/_authenticated/empleados")({
   head: () => ({
     meta: [
-      { title: "Panel de empleados — CaféLoop" },
+      { title: "Panel de empleados — Loop" },
       { name: "description", content: "Confirma compras y canjea recompensas de clientes." },
-      { property: "og:title", content: "Panel de empleados — CaféLoop" },
+      { property: "og:title", content: "Panel de empleados — Loop" },
       { property: "og:description", content: "Registro de compras para el personal." },
     ],
   }),
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/_authenticated/empleados")({
 });
 
 function Empleados() {
+  const employee = useQuery({ queryKey: ["current-employee"], queryFn: fetchCurrentEmployee });
   const {
     data: memberships,
     isLoading,
@@ -56,6 +58,18 @@ function Empleados() {
       <div>
         <p className="text-sm text-muted-foreground">Área privada · Personal</p>
         <h1 className="text-4xl">Caja</h1>
+        <p className="mt-3 text-sm" role="status">
+          {employee.data ? (
+            <>
+              Sesión de <strong>{employee.data.name}</strong>. Las compras se registran con tu
+              usuario.
+            </>
+          ) : employee.isError ? (
+            "No se pudo cargar el nombre de tu perfil. El registro usa tu sesión autenticada."
+          ) : (
+            "Identificando al empleado…"
+          )}
+        </p>
       </div>
       {memberships.length > 1 && (
         <label className="block text-sm">
@@ -69,13 +83,20 @@ function Empleados() {
           </select>
         </label>
       )}
-      {cafeId && <PurchaseForm key={cafeId} cafeId={cafeId} />}
+      {cafeId && <PurchaseForm key={cafeId} cafeId={cafeId} employeeName={employee.data?.name} />}
       {cafeId && <RedeemForm key={cafeId} cafeId={cafeId} />}
     </div>
   );
 }
 
-function PurchaseForm({ cafeId }: { cafeId: string }) {
+function PurchaseForm({
+  cafeId,
+  employeeName,
+}: {
+  cafeId: string;
+  employeeName?: string | undefined;
+}) {
+  const qc = useQueryClient();
   const submit = useServerFn(registerPurchase);
   const [code, setCode] = useState("");
   const [amount, setAmount] = useState("");
@@ -99,12 +120,15 @@ function PurchaseForm({ cafeId }: { cafeId: string }) {
         return;
       }
       const res = r.result;
+      void qc.invalidateQueries({ queryKey: ["owner-stats", cafeId] });
+      void qc.invalidateQueries({ queryKey: ["purchase-series", cafeId] });
+      void qc.invalidateQueries({ queryKey: ["my-cards"] });
       toast.success(
         res.replayed
           ? "Esta compra ya estaba registrada."
           : res.reward_earned
             ? "¡Tarjeta completa! El cliente ganó una recompensa."
-            : `Sello otorgado. Lleva ${res.stamps} de 8.`,
+            : `Sello otorgado. Lleva ${res.stamps} sellos.`,
       );
       setCode("");
       setAmount("");
@@ -146,8 +170,8 @@ function PurchaseForm({ cafeId }: { cafeId: string }) {
         />
       </label>
       <p className="text-xs text-muted-foreground sm:col-span-2">
-        Se guarda como <strong>confirmación del empleado</strong>, con tu nombre. No es una venta
-        verificada por un sistema de caja.
+        Se guarda como <strong>confirmación de {employeeName || "tu usuario autenticado"}</strong>.
+        No es una venta verificada por un sistema de caja.
       </p>
       <button type="submit" disabled={busy} className="btn-primary sm:col-span-2">
         {busy ? "Registrando…" : "Confirmar compra y sumar sello"}

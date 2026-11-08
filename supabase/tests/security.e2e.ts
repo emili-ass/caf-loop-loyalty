@@ -369,6 +369,90 @@ async function main() {
     okCount === 1 && after.data?.rewards_available === 0,
     `6 canjes simultáneos con 1 recompensa: solo 1 aceptado (${okCount})`,
   );
+
+  // Ten-stamp cafés grant the welcome bonus exactly once through join_cafe.
+  const tenCafe = await admin
+    .from("cafes")
+    .insert({
+      slug: `security-${run}-ten`,
+      name: "Security test ten stamps",
+      stamps_required: 10,
+      initial_stamps: 2,
+    })
+    .select("id")
+    .single();
+  if (tenCafe.error) throw tenCafe.error;
+  const C = tenCafe.data.id;
+  createdCafes.push(C);
+  const member = await admin
+    .from("cafe_members")
+    .insert({ cafe_id: C, user_id: empA.id, role: "employee", active: true });
+  if (member.error) throw member.error;
+  const joined = await c1.db.rpc("join_cafe", { _cafe_id: C });
+  if (joined.error) throw joined.error;
+  const welcomeCard = joined.data as CardResult & { stamps: number };
+  createdCards.push(welcomeCard.id);
+  ok(welcomeCard.stamps === 2, "nueva tarjeta recibe 2 sellos de bienvenida");
+  const welcomeReplay = await c1.db.rpc("join_cafe", { _cafe_id: C });
+  ok(
+    !welcomeReplay.error &&
+      welcomeReplay.data.stamps === 2 &&
+      welcomeReplay.data.id === welcomeCard.id,
+    "repetir alta no duplica los sellos de bienvenida",
+  );
+  let tenResult: OperationResult | null = null;
+  for (let i = 0; i < 7; i++) {
+    const result = await empA.db.rpc("register_purchase", {
+      _cafe_id: C,
+      _card_code: welcomeCard.code,
+      _amount: 50,
+      _idempotency_key: key(`ten-${i}`),
+    });
+    if (result.error) throw result.error;
+    tenResult = result.data;
+  }
+  ok(
+    tenResult?.stamps === 9 && tenResult?.rewards_available === 0,
+    "tarjeta de 10 no entrega recompensa al llegar a 8 o 9 sellos",
+  );
+  const finalKey = key("ten-final");
+  const finalPurchase = await empA.db.rpc("register_purchase", {
+    _cafe_id: C,
+    _card_code: welcomeCard.code,
+    _amount: 50,
+    _idempotency_key: finalKey,
+  });
+  ok(
+    !finalPurchase.error &&
+      finalPurchase.data.stamps === 0 &&
+      finalPurchase.data.rewards_available === 1,
+    "2 de bienvenida más 8 compras generan una recompensa y reinician en 0",
+  );
+  const finalReplay = await empA.db.rpc("register_purchase", {
+    _cafe_id: C,
+    _card_code: welcomeCard.code,
+    _amount: 50,
+    _idempotency_key: finalKey,
+  });
+  ok(
+    !finalReplay.error &&
+      finalReplay.data.replayed === true &&
+      finalReplay.data.rewards_available === 1,
+    "reintento de compra final no duplica la recompensa de 10 sellos",
+  );
+  const attribution = await admin
+    .from("purchases")
+    .select("employee_id")
+    .eq("card_id", welcomeCard.id);
+  ok(
+    attribution.data?.length === 8 && attribution.data.every((p) => p.employee_id === empA.id),
+    "bienvenida no crea compras ficticias y las compras usan el empleado autenticado",
+  );
+  const rejoined = await c1.db.rpc("join_cafe", { _cafe_id: C });
+  ok(
+    !rejoined.error && rejoined.data.stamps === 0,
+    "volver a unirse después del canje no vuelve a otorgar el bono",
+  );
 }
 
 try {

@@ -4,12 +4,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { useState } from "react";
 import { toast } from "sonner";
+import { AccessibilityPanel } from "./AccessibilityPanel";
+import { ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+} from "./ui/dropdown-menu";
 
 const links = [
   { to: "/", label: "Inicio" },
   { to: "/tarjeta", label: "Mi tarjeta" },
-  { to: "/empleados", label: "Empleados" },
-  { to: "/propietario", label: "Propietario" },
 ] as const;
 
 export function SiteNav() {
@@ -33,10 +40,11 @@ export function SiteNav() {
   }
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+      <div className="site-nav-inner">
         <Link
           to="/"
-          className="flex items-center gap-2 font-display text-xl font-semibold text-primary"
+          aria-label="Loop — Inicio"
+          className="site-brand flex items-center gap-2 font-display text-xl font-semibold text-primary"
         >
           <svg aria-hidden="true" viewBox="0 0 32 32" className="h-6 w-6 shrink-0" fill="none">
             <path
@@ -55,7 +63,30 @@ export function SiteNav() {
           </svg>
           <span className="tracking-[-0.05em]">loop.</span>
         </Link>
-        <nav className="-mx-1 flex gap-1 overflow-x-auto text-sm">
+        <div className="site-nav-tools">
+          <AccessibilityPanel />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="site-team-trigger"
+                aria-label="Acceso del equipo: empleados y propietario"
+              >
+                Equipo <ChevronDown className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Acceso del equipo</DropdownMenuLabel>
+              <DropdownMenuItem asChild>
+                <Link to="/empleados">Empleados</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/propietario">Propietario</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <nav aria-label="Navegación principal" className="site-client-nav text-sm">
           {links.map((l) => (
             <Link
               key={l.to}
